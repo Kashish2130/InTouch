@@ -1,6 +1,7 @@
 import { generateToken } from "../lib/utils.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
+import cloudinary from "../lib/cloudinary.js"; // Assuming you have set up Cloudinary for image uploads
 
 export const signup = async (req, res) => {
     const { fullname, email, password } = req.body;
@@ -76,7 +77,7 @@ export const login = async (req, res) => {
 
         generateToken(user._id, res);
 
-        return res.status(200).json({ 
+        return res.status(200).json({
             _id: user._id,
             fullname: user.fullname,
             email: user.email,
@@ -100,4 +101,38 @@ export const logout = (req, res) => {
     }
 };
 
-export const updateProfile = async (req, res) => {}
+export const updateProfile = async (req, res) => {
+    try {
+        const { profilePic } = req.body;
+        const userId = req.user._id; // Assuming req.user is set by the protectRoute middleware
+
+        if (!profilePic) {
+            return res.status(400).json({ message: "Please provide a profile picture" });
+        }
+
+        const uploadResponse = await cloudinary.uploader.upload(profilePic);
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { profilePic: uploadResponse.secure_url },
+            { new: true }
+        );
+
+        res.status(200).json({ updatedUser });
+
+    } catch (error) {
+        console.error("error in updateProfile:", error.message);
+        return res.status(500).json({ message: "Internal server error" });
+
+    }
+}
+
+export const checkAuth = (req, res) => {
+    try {
+        res.status(200).json({ user: req.user });
+
+    } catch (error) {
+        console.error("error in checkAuth:", error.message);
+        return res.status(500).json({ message: "Internal server error" });
+
+    }
+}

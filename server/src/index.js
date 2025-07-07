@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import authRoutes from "./routes/authRoutes.js"
+import messageRoutes from "./routes/messageRoutes.js";
 import { connectDB } from "./lib/InTouchDB.js";
 import cookieParser from "cookie-parser";
 
@@ -14,6 +15,7 @@ server.use(express.json());
 server.use(cookieParser());
 
 server.use("/api/auth", authRoutes);
+server.use("/api/message", messageRoutes);
 
 server.listen(process.env.PORT, () => {
   console.log('server started');
